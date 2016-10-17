@@ -13,6 +13,7 @@
     "connect-flash": "*",
     "passport": "*",
     "passport-local": "*",
-    "sequelize": "*"
+    "sequelize": "*",
+    "request": "*"
   }
 }

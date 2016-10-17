@@ -2,14 +2,20 @@
 
 var 
     express = require('express')
-  , routes = require('./routes')
   , http = require('http')
   , path = require('path')
   , flash = require("connect-flash")
-  , usersRoutes = require("./routes/users")
   , passport = require("passport")
   , LocalStrategy = require("passport-local")
   , CONST = require("./constants.js")
+  
+  // Models
+  , mongoConnect = require("./models-mongoose/mongoConnect")
+  , usersModel = require("./models-mongoose/users")
+  
+  //Routes
+  , routes = require('./routes')
+  , usersRoutes = require("./routes/users")
 
 //auth support
 passport.serializeUser(usersRoutes.serialize)
@@ -41,9 +47,6 @@ app.configure(function(){
 app.configure('development', function(){
   app.use(express.errorHandler());
 });
-
-var mongoConnect = require("./models-mongoose/mongoConnect")
-    , usersModel = require("./models-mongoose/users")
     
 mongoConnect.connect(CONST.MONGODB_URI, function(err) {
   if(err) throw err
@@ -65,6 +68,13 @@ app.post('/login', passport.authenticate('local', {
 }), usersRoutes.postLogin)
 app.get('/logout', usersRoutes.doLogout)
 app.get('/initshopify', usersRoutes.initShopify)
+app.get('/registerclient', usersRoutes.registerClient)
+app.get('/shopifylogin', passport.authenticate('local', {
+  failureRedirect: '/', failureFlash: true
+}), usersRoutes.postLogin)
+
+//app routes
+app.get('/', routes.index);
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));
