@@ -16,6 +16,7 @@ var
   //Routes
   , routes = require('./routes')
   , usersRoutes = require("./routes/users")
+  , shopifyOperationsRoutes = require('./routes/shopify-operations')
 
 //auth support
 passport.serializeUser(usersRoutes.serialize)
@@ -57,24 +58,34 @@ usersRoutes.configure({
   , passport: passport
 })
 
-
-app.get('/', routes.index);
-
-//user routes
-app.get('/account', usersRoutes.ensureAuthenticated, usersRoutes.doAccount)
-app.get('/login', usersRoutes.doLogin)
-app.post('/login', passport.authenticate('local', {
-  failureRedirect: '/login', failureFlash: true
-}), usersRoutes.postLogin)
-app.get('/logout', usersRoutes.doLogout)
-app.get('/initshopify', usersRoutes.initShopify)
-app.get('/registerclient', usersRoutes.registerClient)
-app.get('/shopifylogin', passport.authenticate('local', {
-  failureRedirect: '/', failureFlash: true
-}), usersRoutes.postLogin)
+shopifyOperationsRoutes.configure({
+  users: usersModel
+})
 
 //app routes
 app.get('/', routes.index);
+
+//handle logout
+app.get('/logout', usersRoutes.doLogout)
+
+//check registered client and do login
+app.get('/initshopify'
+  , usersRoutes.initShopify
+  , passport.authenticate('local', {failureRedirect: '/', failureFlash: true})
+  , usersRoutes.postLogin)
+
+//redirect uri to get access token
+app.get('/registerclient'
+  , usersRoutes.registerClient
+  , passport.authenticate('local', {failureRedirect: '/', failureFlash: true})
+  , usersRoutes.postLogin)
+  
+//mass products create
+app.post('/initmassproductcreate'
+  , usersRoutes.ensureAuthenticated
+  ,  shopifyOperationsRoutes.initMassProductsCreate)
+
+
 
 http.createServer(app).listen(app.get('port'), function(){
   console.log("Express server listening on port " + app.get('port'));

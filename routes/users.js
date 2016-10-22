@@ -6,8 +6,10 @@ var LocalStrategy = require("passport-local").Strategy
     , request = require('request')
     , users = undefined
     , passport = undefined
+    , username
+    , password
 
-    
+
 exports.configure = function(params) {
     users = params.users
     passport = params.passport
@@ -25,6 +27,7 @@ module.exports.deserialize = function(id, done) {
 
 module.exports.strategy = new LocalStrategy(
     function(username, password, done) {
+        console.log("inside strategy method")
         process.nextTick(function() {
             users.findByUsername(username, function(err, user) {
                 if(err) { return done(err) }
@@ -38,29 +41,16 @@ module.exports.strategy = new LocalStrategy(
             })
         })
     }
-)
+) 
 
 module.exports.ensureAuthenticated = function(req, res, next) {
     if(req.isAuthenticated()) { return next() }
     return res.redirect('/login')
 }
 
-module.exports.doAccount = function(req, res) {
-    res.render('account', {
-        title: 'Acount information for ' + req.user.username
-        , user: req.user
-    })
-}
-
-module.exports.doLogin = function(req, res) {
-    res.render('login', {
-        user: req.user
-        , message: req.flash('error')
-    })
-}
-
 module.exports.postLogin = function(req, res) {
-    console.log("root test")
+    console.log("root test", req.method)
+    console.log("req.body", req.body)
     res.redirect('/')
 }
 
@@ -69,7 +59,7 @@ module.exports.doLogout = function(req, res) {
     res.redirect('/')
 }
 
-module.exports.initShopify = function(req, res) {
+module.exports.initShopify = function(req, res, next) {
     /*
         req.originalUrl: /initshopify?hmac=355eed27b2fe0119611b03628805eef0bb8c24259df4d17f9cd2fa5b5235a3bb&shop=abhi-1.myshopify.com&timestamp=1476598870
     */
@@ -77,16 +67,19 @@ module.exports.initShopify = function(req, res) {
         , storeName = extractStoreName(url_parts.query.shop)
         
     //console.log("url_parts", url_parts)
-    return checkShopifyConnection(storeName, function(err, isAuthenticated) {
+    return checkShopifyConnection(storeName, function(err, isRegisteredClient) {
         if(err) {
             //TODO
             console.log("err 6", err.message)
         }
-        if(isAuthenticated) {
-            console.log("Inside initShopify, User is authenticated, redirecting to home page")
+        if(isRegisteredClient) {
+            
+            console.log("Inside initShopify, User is registered, redirecting to home page")
+            req.body = {username :  storeName, password : CONST.USERS_PASSWORD}
+                
             if(url_parts.query.protocol) {
-                console.log("redirecting to shopifylogin")
-                res.redirect('/shopifylogin', {username:'abhi-1', password: 'all_is_well'})
+                console.log("redirecting to next")
+                next()
             }
             else {
                 res.redirect('https://'+ storeName +'.myshopify.com/admin/apps/products-manager-bulk-operations')
@@ -102,7 +95,7 @@ module.exports.initShopify = function(req, res) {
     
 }
 
-module.exports.registerClient = function(req, res) {
+module.exports.registerClient = function(req, res, next) {
     var url_parts = url.parse(req.originalUrl, true)
         , storeName = extractStoreName(url_parts.query.shop)
         , auth_code = url_parts.query.code
@@ -135,10 +128,12 @@ module.exports.registerClient = function(req, res) {
                 //TODO 
                 console.log("err 2", err.message)
             }
-            res.redirect('/')
+            req.body = {username :  storeName, password : CONST.USERS_PASSWORD}
+            next()
         })
     })
 }
+
 
 var 
     extractStoreName = function(shop) {
@@ -209,6 +204,7 @@ var
             }
            
             request(requestOpts, function(err, res, body) {
+                console.log("inside checkShopifyConnection, making request for ping")
                 if(err) {
                     //TODO: handle error
                     console.log("err", err.message)
