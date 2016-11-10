@@ -25,7 +25,7 @@ var MassProductCreate = function(user, productsConfig) {
     this.user = user
     this.productsConfig = productsConfig
     
-    this.productsConfig.numberOfProductToCreate = productsConfig.numberOfProductToCreate || 10
+    this.productsConfig.numberOfProductToCreate = productsConfig.numberOfProductToCreate || 1
 }
 
 /*

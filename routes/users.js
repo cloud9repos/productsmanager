@@ -96,6 +96,7 @@ module.exports.initShopify = function(req, res, next) {
 }
 
 module.exports.registerClient = function(req, res, next) {
+    
     var url_parts = url.parse(req.originalUrl, true)
         , storeName = extractStoreName(url_parts.query.shop)
         , auth_code = url_parts.query.code
@@ -112,10 +113,12 @@ module.exports.registerClient = function(req, res, next) {
     }
     
     request(requestOpts, function(err, response, body) {
+        
         if(err) {
             //TODO: handle error
             console.log("err", err.message)
         }
+        
         var userObj = {
             username: storeName
             , password: CONST.USERS_PASSWORD
@@ -123,6 +126,7 @@ module.exports.registerClient = function(req, res, next) {
             , access_token: body.access_token
             , scope: body.scope
         }
+        
         addUpdateUser(userObj, function(err) {
             if(err) {
                 //TODO 
@@ -131,6 +135,7 @@ module.exports.registerClient = function(req, res, next) {
             req.body = {username :  storeName, password : CONST.USERS_PASSWORD}
             next()
         })
+        
     })
 }
 
