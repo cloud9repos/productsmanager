@@ -11,7 +11,8 @@ exports.configure = function(params) {
  
 exports.index = function(req, res) {
     var user = !!req.user ? req.user : null
-    res.render('index', {
+    console.log("check")
+    res.render('index.html', {
         user: user
     })
 }

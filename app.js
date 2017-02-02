@@ -28,8 +28,8 @@ var app = express();
 app.configure(function(){
   
   app.set('port', process.env.PORT || 3000);
-  app.set('views', __dirname + '/views');
-  app.set('view engine', 'ejs');
+  app.set('views', __dirname + '/node_modules/ui-product-manager');
+  app.engine('html', require('ejs').renderFile)
   
   app.use(express.favicon());
   app.use(express.logger('dev'));
@@ -41,7 +41,7 @@ app.configure(function(){
   app.use(passport.initialize())
   app.use(passport.session())
   app.use(app.router);
-  app.use(express.static(path.join(__dirname, 'public')));
+  app.use(express.static(path.join(__dirname, '/node_modules/ui-product-manager')));
   
 });
 
